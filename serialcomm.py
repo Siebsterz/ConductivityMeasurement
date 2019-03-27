@@ -29,10 +29,10 @@ VSource.write("*RST")
 VSource.write(":SYStem:ZCHeck OFF")
 
 def setVoltageSource(voltage):
-
     time.sleep(0.1)
     VSource.write("*RST")
-
+    time.sleep(0.1)
+    VSource.write(":SYStem:ZCHeck OFF")
     #Set preferred voltage
     print("Range before: " + VSource.query(":SOURce:VOLTage:RANGe?"))
     VSource.write(":SOURce:VOLTage:RANGe 1000")
@@ -51,11 +51,33 @@ def stopVoltageSource():
     VSource.write(":OUTPut1 OFF")
     return
 
+def startVoltageSourceTime(time):
+    VSource.write(":OUTPut1 ON")
+    time.sleep(int(time))
+    VSource.write(":OUTPut1 ON")
+    return
+
+def toggleCurrentMeasurement():
+    VSource.write("*RST")
+
+    # Prepare for current measurement
+    print(VSource.query(":SENSe:FUNCtion?"))
+    VSource.write(":SENSe:FUNCtion 'CURRent:DC' ")
+    print(VSource.query(":SENSe:FUNCtion?"))
+
+    VSource.write("SYST:ZCH OFF")
+    VSource.write("SENSe:CURR:RANGe:AUTO ON")
+    VSource.write("SENSe:VOLTage:GUARd OFF")
+    VSource.write("SENSe:VOLTage:GUARd OFF")
+    return
+
 def currentMeasurement():
-    #Prepare for current measurement
-    print(VSource.query(":SENSe1:FUNCtion?"))
-    VSource.write(":SENSe1:FUNCtion 'CURRent:DC' ")
-    print(VSource.query(":SENSe1:FUNCtion?"))
+    for x in range(0, 10):
+        print("Measured current: " + VSource.query(":READ?"))
+        time.sleep(0.1)
+    return
+    #TODO: number of measurements over timeperiod
 
 def reset():
     VSource.write("*RST")
+    return

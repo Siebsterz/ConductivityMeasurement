@@ -41,6 +41,12 @@ class Application(Frame):
         self.buttonStop = Button(self, text="Turn off voltage source", command=serialcomm.stopVoltageSource)
         self.buttonStop.pack()
 
+        self.buttonCurrentMeasurement = Button(self, text="Measure current", command=serialcomm.currentMeasurement)
+        self.buttonCurrentMeasurement.pack()
+
+        self.buttonReset = Button(self, text="RESET", fg="#f46e42", command=serialcomm.reset)
+        self.buttonReset.pack()
+
         self.QUIT = Button(self, text="QUIT", fg="red", command=self.quitApp)
         self.QUIT.pack(side="bottom")
 
@@ -64,6 +70,10 @@ class Application(Frame):
         print("set voltage")
         serialcomm.setVoltageSource(voltage)
 
+    def measureCurrent(self):
+        print("Measuring current")
+        serialcomm.currentMeasurement()
+
     def onUpdate(self):
         print("onUpdate started")
         if self.voltageOK:
@@ -84,7 +94,3 @@ root.title("Conductivity Measurement")
 app = Application(master=root)
 app.pack()
 root.mainloop()
-
-#threads
-#qt
-#multiprocessing
