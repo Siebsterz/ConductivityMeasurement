@@ -75,7 +75,10 @@ def toggleCurrentMeasurement():
 
 def currentMeasurement():
     measurement = ""
-    for measure in range(0, 5):
+
+    #TODO: number of measurements over timeperiod
+
+    for measure in range(0, 50):
         measurement = measurement + VSource.query(":READ?")
         t.sleep(0.01)
 
@@ -97,12 +100,18 @@ def currentMeasurement():
     time = list(map(float, time))
     current = list(map(float, current))
 
-    plt.plot(time, current)
+    plt.plot(time, current, 'ro')
     plt.show()
 
-
     return
-    #TODO: number of measurements over timeperiod
+
+def calculateSheetResistance():
+    #TODO
+    return
+
+def calculateBulkResistance():
+    #TODO
+    return
 
 def reset():
     VSource.write("*RST")
