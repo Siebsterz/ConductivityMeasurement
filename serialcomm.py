@@ -1,11 +1,10 @@
-import time
+import time as t
 import serial.tools.list_ports
 import visa
 from visa import constants
 from pyvisa.constants import StopBits, Parity
-import re
+import matplotlib.pyplot as plt
 import numpy
-#import gui
 
 
 for device in serial.tools.list_ports.comports():
@@ -30,17 +29,18 @@ VSource.write("*RST")
 VSource.write(":SYStem:ZCHeck OFF")
 
 def setVoltageSource(voltage):
-    time.sleep(0.1)
+    t.sleep(0.1)
     VSource.write("*RST")
-    time.sleep(0.1)
+    t.sleep(0.1)
     VSource.write(":SYStem:ZCHeck OFF")
     #Set preferred voltage
     print("Range before: " + VSource.query(":SOURce:VOLTage:RANGe?"))
+    #TODO enter your own desired range
     VSource.write(":SOURce:VOLTage:RANGe 1000")
     print("Range after: " + VSource.query(":SOURce:VOLTage:RANGe?"))
     print(VSource.write(":SOURce:VOLTage:AMPLitude " + voltage))
     print(VSource.query("SOURce:VOLTage:AMPLitude?"))
-    time.sleep(0.2)
+    t.sleep(0.2)
     return
 
 def startVoltageSource():
@@ -75,13 +75,32 @@ def toggleCurrentMeasurement():
 
 def currentMeasurement():
     measurement = ""
-    for x in range(0, 10):
+    for measure in range(0, 5):
         measurement = measurement + VSource.query(":READ?")
-        time.sleep(0.1)
-    print(measurement)
-    #.split(',')
-    
-    print(measurement.splitlines())
+        t.sleep(0.01)
+
+    parsedMeasurement = measurement.splitlines()
+
+    time = []
+    current = []
+    for x in parsedMeasurement:
+        single = x.split(',')
+        time.append(single[1])
+        current.append(single[0])
+
+    for i, value in enumerate(time):
+        time[i] = value.replace('+', '')
+
+    for i, value in enumerate(current):
+        current[i] = value.replace('+', '')
+
+    time = list(map(float, time))
+    current = list(map(float, current))
+
+    plt.plot(time, current)
+    plt.show()
+
+
     return
     #TODO: number of measurements over timeperiod
 
