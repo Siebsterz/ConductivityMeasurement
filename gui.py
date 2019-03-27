@@ -9,7 +9,9 @@ class Application(Frame):
 
         self.text = str("")
         self.warning = str("")
-        self.voltageOK = False;
+        self.voltageOK = False
+        self.currentMeasurementVar = IntVar()
+        self.currentMeasurementActivated = False
 
         self.pack()
         self.createWidgets()
@@ -17,6 +19,7 @@ class Application(Frame):
 
         #self.getVoltage()
         self.onUpdate()
+        #self.checkCurrentMode()
         print(self.text)
 
     def createWidgets(self):
@@ -41,11 +44,14 @@ class Application(Frame):
         self.buttonStop = Button(self, text="Turn off voltage source", command=serialcomm.stopVoltageSource)
         self.buttonStop.pack()
 
-        self.buttonCurrentMeasurement = Button(self, text="Measure current", command=serialcomm.currentMeasurement)
+        self.buttonCurrentMeasurement = Button(self, text="Measure current", command=self.measureCurrent)
         self.buttonCurrentMeasurement.pack()
 
-        self.buttonReset = Button(self, text="RESET", fg="#f46e42", command=serialcomm.reset)
+        self.buttonReset = Button(self, text="RESET", fg="#f46e42", command=self.reset)
         self.buttonReset.pack()
+
+        self.checkboxCurrentMeasurement = Checkbutton(self, text="Current Measurement Mode", variable=self.currentMeasurementVar)
+        self.checkboxCurrentMeasurement.pack()
 
         self.QUIT = Button(self, text="QUIT", fg="red", command=self.quitApp)
         self.QUIT.pack(side="bottom")
@@ -70,12 +76,36 @@ class Application(Frame):
         print("set voltage")
         serialcomm.setVoltageSource(voltage)
 
+    def checkCurrentMode(self):
+        print("Current mode: " + str(self.currentMeasurementVar.get()))
+        print("Var: " + str(self.currentMeasurementActivated))
+        if not self.currentMeasurementActivated and self.currentMeasurementVar.get() == 1:
+            print("toggle")
+            serialcomm.toggleCurrentMeasurement()
+            self.currentMeasurementActivated = True
+            return True
+        elif self.currentMeasurementActivated and self.currentMeasurementVar.get() == 1:
+            print("toggled")
+            return True
+        else:
+            self.currentMeasurementActivated = False
+            return False
+
     def measureCurrent(self):
-        print("Measuring current")
-        serialcomm.currentMeasurement()
+        if self.currentMeasurementActivated and self.currentMeasurementVar.get() == 1:
+            serialcomm.currentMeasurement()
+            return True
+        else:
+            print("Activate current measurement mode plz")
+            return False
 
     def onUpdate(self):
         print("onUpdate started")
+
+        #Current Mode activated?
+        self.checkCurrentMode()
+
+        #Look for voltage to apply
         if self.voltageOK:
             self.setVoltage(self.text)
             self.voltageOK = False;
@@ -84,10 +114,15 @@ class Application(Frame):
             print("waiting for number")
             self.after(1000, self.onUpdate)
 
+    def reset(self):
+        self.currentMeasurementVar.set(0)
+        serialcomm.reset()
+
     def quitApp(self):
         serialcomm.reset()
         serialcomm.VSource.close()
         root.destroy()
+
 
 root = Tk()
 root.title("Conductivity Measurement")

@@ -3,6 +3,7 @@ import serial.tools.list_ports
 import visa
 from visa import constants
 from pyvisa.constants import StopBits, Parity
+import re
 import numpy
 #import gui
 
@@ -61,9 +62,10 @@ def toggleCurrentMeasurement():
     VSource.write("*RST")
 
     # Prepare for current measurement
-    print(VSource.query(":SENSe:FUNCtion?"))
     VSource.write(":SENSe:FUNCtion 'CURRent:DC' ")
-    print(VSource.query(":SENSe:FUNCtion?"))
+
+    #Data to receive
+    VSource.write(":FORMat:ELEMents READing, TSTamp")
 
     VSource.write("SYST:ZCH OFF")
     VSource.write("SENSe:CURR:RANGe:AUTO ON")
@@ -72,9 +74,14 @@ def toggleCurrentMeasurement():
     return
 
 def currentMeasurement():
+    measurement = ""
     for x in range(0, 10):
-        print("Measured current: " + VSource.query(":READ?"))
+        measurement = measurement + VSource.query(":READ?")
         time.sleep(0.1)
+    print(measurement)
+    #.split(',')
+    
+    print(measurement.splitlines())
     return
     #TODO: number of measurements over timeperiod
 
