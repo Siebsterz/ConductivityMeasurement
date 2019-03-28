@@ -1,17 +1,19 @@
 from tkinter import *
 import time
 import serialcomm
+from statistics import mean
 
 class Application(Frame):
 
     def __init__(self, master=None):
         Frame.__init__(self, master)
 
-        self.text = str("")
+        self.voltage = ""
         self.warning = str("")
         self.voltageOK = False
         self.currentMeasurementVar = IntVar()
         self.currentMeasurementActivated = False
+        self.current = 0
 
         self.pack()
         self.createWidgets()
@@ -20,7 +22,7 @@ class Application(Frame):
         #self.getVoltage()
         self.onUpdate()
         #self.checkCurrentMode()
-        print(self.text)
+        print(self.voltage)
 
     def createWidgets(self):
         self.voltageLabel = Label(self, text="Enter desired voltage")
@@ -47,6 +49,9 @@ class Application(Frame):
         self.buttonCurrentMeasurement = Button(self, text="Measure current", command=self.measureCurrent)
         self.buttonCurrentMeasurement.pack()
 
+        self.buttonSheetRes = Button(self, text="Calculate Sheet Resistance", command=self.calculateSheetResistance)
+        self.buttonSheetRes.pack()
+
         self.checkboxCurrentMeasurement = Checkbutton(self, text="Current Measurement Mode", variable=self.currentMeasurementVar)
         self.checkboxCurrentMeasurement.pack()
 
@@ -57,18 +62,18 @@ class Application(Frame):
         self.QUIT.pack(side="bottom")
 
     def getVoltage(self):
-        self.text = self.voltageEntry.get()
+        self.voltage = self.voltageEntry.get()
         self.voltageOK = False
-        print(self.text)
-        if self.text == "":
+        print(self.voltage)
+        if self.voltage == "":
             self.warningStringVar.set("Enter a value")
-        elif not self.text.isdigit():
+        elif not self.voltage.isdigit():
             self.warningStringVar.set("Enter a real number")
-        elif int(self.text) > 1000:
+        elif int(self.voltage) > 1000:
             self.warningStringVar.set("Max 1000V!")
         else:
             self.voltageOK = True
-            return self.voltageOK
+            return
 
     def setVoltage(self, voltage):
         serialcomm.setVoltageSource(voltage)
@@ -86,12 +91,23 @@ class Application(Frame):
 
     def measureCurrent(self):
         if self.currentMeasurementActivated and self.currentMeasurementVar.get() == 1:
-            serialcomm.currentMeasurement()
+            self.current = serialcomm.currentMeasurement()
             return True
         else:
             #TODO make label instead of print
             print("Activate current measurement mode plz")
             return False
+
+    def calculateSheetResistance(self):
+        # average current measurements
+        avgCurrent = mean(self.current)
+
+        # calculation
+        rho = (53.4 * int(self.voltage)) / avgCurrent
+        print("Applied voltage = " + str(self.voltage))
+        print("Average current = " + str(avgCurrent))
+        print("Sheet Resistance = " + str(rho) + "ohms")
+        return rho
 
     def onUpdate(self):
 
@@ -100,7 +116,7 @@ class Application(Frame):
 
         #Look for voltage to apply
         if self.voltageOK:
-            self.setVoltage(self.text)
+            self.setVoltage(self.voltage)
             self.voltageOK = False;
             self.after(1000, self.onUpdate)
         else:
@@ -118,7 +134,7 @@ def quitApp():
 
 root = Tk()
 root.title("Conductivity Measurement")
-root.geometry("300x250")
+root.geometry("300x300")
 root.protocol("WM_DELETE_WINDOW", quitApp)
 app = Application(master=root)
 app.pack()

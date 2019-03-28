@@ -103,11 +103,7 @@ def currentMeasurement():
     plt.plot(time, current, 'ro')
     plt.show()
 
-    return
-
-def calculateSheetResistance():
-    #TODO
-    return
+    return current
 
 def calculateBulkResistance():
     #TODO
